@@ -1,81 +1,80 @@
-let store = {
+
+let store = Immutable.Map({
     user: { name: "Student" },
     apod: { image: '' },
-    rovers: ['Curiosity', 'Opportunity', 'Spirit'],
-}
+    rovers: [],
 
-// add our markup to the page
-const root = document.getElementById('root')
-
-const updateStore = (store, newState) => {
-    store = Object.assign(store, newState)
-    render(root, store)
-}
-
-const render = async (root, state) => {
-    // Component App is rerendered when there is a change to state ?
-    root.innerHTML = App(state)
-}
-
-
-// create content
-const App = (state) => {
-    let { rovers, apod } = state
-
-    return `
-        <header></header>
-        <main>
-            ${Greeting(store.user.name)}
-            <section>
-                <h3>Put things on the page!</h3>
-                <p>Here is an example section.</p>
-                <p>
-                    One of the most popular websites at NASA is the Astronomy Picture of the Day. In fact, this website is one of
-                    the most popular websites across all federal agencies. It has the popular appeal of a Justin Bieber video.
-                    This endpoint structures the APOD imagery and associated metadata so that it can be repurposed for other
-                    applications. In addition, if the concept_tags parameter is set to True, then keywords derived from the image
-                    explanation are returned. These keywords could be used as auto-generated hashtags for twitter or instagram feeds;
-                    but generally help with discoverability of relevant imagery.
-                </p>
-                ${ImageOfTheDay(apod)}
-            </section>
-        </main>
-        <footer></footer>
-    `
-}
+})
 
 // listening for load event because page should load before any JS is called
 window.addEventListener('load', () => {
     render(root, store)
 })
 
-// ------------------------------------------------------  COMPONENTS
+// add our markup to the page
+const root = document.getElementById('root')
 
-// Pure function that renders conditional information -- THIS IS JUST AN EXAMPLE, you can delete it.
-const Greeting = (name) => {
-    if (name) {
-        return `
-            <h1>Welcome, ${name}!</h1>
-        `
-    }
+const updateStore = (state, newState) => {
+    return state.merge(newState)
+}
+
+
+// TODO: why is render async ? It works without async.
+const render = async (root, state) => {
+    root.innerHTML = await App(state)
+}
+
+
+// create content
+const App = async (state) => {
+    const apod = state.get("apod")
+    const rovers = state.get("rovers")
+    const user = state.get("user").name
+
+
 
     return `
-        <h1>Hello!</h1>
+        <header></header>
+        <main>
+            <section>
+                ${await Rovers(state, rovers)}
+                <p>
+                    One of the most popular websites at NASA is the Astronomy Picture of the Day. 
+                </p>
+                ${await ImageOfTheDay(state, apod)}
+            </section>
+        </main>
+        <footer></footer>
     `
 }
 
+// ${ImageOfTheDay(state, apod)}
+
+// COMPONENTS
+const Rovers = async (state, rovers) => {
+    if (rovers.length === 0) {
+        const data = await getRoversNames(state);
+        const roversNames = data.rovers.rovers.map(rover => rover.name)
+        const updatedData =  updateStore(state, {rovers: roversNames}).get("rovers")
+        console.log("UpdatedData is: ", updatedData)
+        return updatedData
+    }
+
+}
+
 // Example of a pure function that renders information requested from the backend
-const ImageOfTheDay = (apod) => {
+
+const ImageOfTheDay = async (state, apod) => {
 
     // If image does not already exist, or it is not from today -- request it again
     const today = new Date()
+    let apodImage = apod.image
     // TODO: is it best practice to have Invalid Date here?
-    const photodate = new Date(apod.image.date)
-    console.log(photodate.getDate(), today.getDate());
 
-    console.log(photodate.getDate() === today.getDate());
-    if (!apod.image || apod.image.date === today.getDate() ) {
-        getImageOfTheDay(store)
+    if (!apodImage || apodImage.date === today.getDate() ) {
+        apod = await getImageOfTheDay()
+        // TODO: Do I still need to update this state ?
+        apodImage = updateStore(state, {apod} ).get("apod").image
     }
 
     // TODO: check that the attribute media_type on apod is set correctly
@@ -88,21 +87,33 @@ const ImageOfTheDay = (apod) => {
         `)
     } else {
         return (`
-            <img src="${apod.image.url}" height="350px" width="100%" />
-            <p>${apod.image.explanation}</p>
+            <img src="${apodImage.url}" height="350px" width="100%" />
+            <p>${apodImage.explanation}</p>
         `)
     }
 }
 
-// ------------------------------------------------------  API CALLS
+
+// API CALLS
+async function getRoversNames (state) {
+    try {
+     const response = await fetch('http://localhost:3000/rovers')
+     return response.json()
+    } catch (err) {
+        console.log('error', err)
+    }
+}
 
 // Example API call
-const getImageOfTheDay = (state) => {
-    let { apod } = state
+const getImageOfTheDay = async () => {
+    console.log("Getting Image of the Day.")
+    try {
+        const response = await fetch(`http://localhost:3000/apod`)
+        return response.json()
+    } catch(err) {
+        console.log('error',err);
+    }
 
-    fetch(`http://localhost:3000/apod`)
-        .then(res => res.json())
-        .then(apod => updateStore(store, { apod }))
     // TODO: what is with this undefined var data ?
-    return data
+    //return data
 }
