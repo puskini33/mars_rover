@@ -37,28 +37,49 @@ const App = async (state) => {
         <header></header>
         <main>
             <section>
+                
                 ${await Rovers(state, rovers)}
-                <p>
-                    One of the most popular websites at NASA is the Astronomy Picture of the Day. 
-                </p>
-                ${await ImageOfTheDay(state, apod)}
             </section>
         </main>
         <footer></footer>
     `
 }
 
-// ${ImageOfTheDay(state, apod)}
+// ${await ImageOfTheDay(state, apod)}
+// UTILS
+const SelectionItemForRoverName =  (roverName, roverId) => {
+    return `<option value=${roverId}>${roverName}</option>`
+}
+
 
 // COMPONENTS
 const Rovers = async (state, rovers) => {
-    if (rovers.length === 0) {
+    let updatedData = rovers;
+
+    // if there are no rovers in the state, fetch them and update store
+    if (updatedData.length === 0) {
         const data = await getRoversNames(state);
         const roversNames = data.rovers.rovers.map(rover => rover.name)
-        const updatedData =  updateStore(state, {rovers: roversNames}).get("rovers")
-        console.log("UpdatedData is: ", updatedData)
-        return updatedData
+        updatedData =  updateStore(state, {rovers: roversNames}).get("rovers")
     }
+    console.log("UpdatedData is: ", updatedData)
+    // TODO: make from for loop a recursive function
+    let options = "";
+    for (let i=0; i< updatedData.length; i++ ) {
+        const option = SelectionItemForRoverName(updatedData[i], i)
+        options = options + option
+    }
+
+    return `
+    <div>
+     <select>
+       <option value="0">Select Mars Rover:</option>
+       ${options}  
+     </select>
+    </div>
+    `
+
+    // return updatedData
 
 }
 
