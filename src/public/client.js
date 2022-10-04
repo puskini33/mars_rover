@@ -37,15 +37,19 @@ const App = async (state) => {
         <header></header>
         <main>
             <section>
-                
                 ${await Rovers(state, rovers)}
+                ${await RoverDetail(state, "curiosity")}
+                ${await RoverDetail(state, "opportunity")}
+                ${await RoverPhotos(state, "opportunity", "2018-06-11")}
+                
             </section>
         </main>
         <footer></footer>
     `
 }
 
-// ${await ImageOfTheDay(state, apod)}
+// ${await RoverDetail(state, "persistence")} // TODO: this one throws an error!
+
 // UTILS
 const SelectionItemForRoverName =  (roverName, roverId) => {
     return `<option value=${roverId}>${roverName}</option>`
@@ -53,6 +57,31 @@ const SelectionItemForRoverName =  (roverName, roverId) => {
 
 
 // COMPONENTS
+const RoverPhotos = async(state, rover_name, earth_day) => {
+    const fetchedPhotos = await getRoverRecentPhotos(rover_name, earth_day)
+    return Immutable.Map(fetchedPhotos).get("photos")
+}
+
+
+const RoverDetail = async (state, rover) => {
+    const fetchedRoverDetail = await getRoverDetail(rover)
+    const oldRoverDetail = Immutable.Map({
+        name: fetchedRoverDetail["photo_manifest"]["name"],
+        status: fetchedRoverDetail["photo_manifest"]["status"],
+        landing_date: fetchedRoverDetail["photo_manifest"]["landing_date"],
+        launch_date: fetchedRoverDetail["photo_manifest"]["launch_date"],
+        max_date: fetchedRoverDetail["photo_manifest"]["max_date"],
+    })
+    const roverDetail = Immutable.Map({
+        name: "",
+        status: "",
+        landing_date: "",
+        launch_date: "",
+        max_date: ""
+    })
+    return roverDetail.merge(oldRoverDetail)
+
+}
 const Rovers = async (state, rovers) => {
     let updatedData = rovers;
 
@@ -120,6 +149,24 @@ async function getRoversNames (state) {
     try {
      const response = await fetch('http://localhost:3000/rovers')
      return response.json()
+    } catch (err) {
+        console.log('error', err)
+    }
+}
+
+async function getRoverDetail (rover) {
+    try {
+        const response = await fetch(`http://localhost:3000/rovers/${rover}`)
+        return response.json()
+    } catch (err) {
+        console.log('error', err)
+    }
+}
+
+async function getRoverRecentPhotos(rover_name, earthDate) {
+    try {
+        const response = await fetch(`http://localhost:3000/rovers/${rover_name}/photos/${earthDate}`)
+        return response.json()
     } catch (err) {
         console.log('error', err)
     }

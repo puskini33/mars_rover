@@ -22,6 +22,7 @@ app.use("/", express.static(path.join(__dirname, '../public')))
 // Get list of rovers' names
 app.get('/rovers', async (req, res) => {
     try {
+        // TODO: try for the other fetch to put the whole thing in a const like here const rovers
         const rovers = await fetch(`https://api.nasa.gov/mars-photos/api/v1/rovers/?api_key=${process.env.API_KEY}`)
             .then(res => res.json())
         res.send( {rovers} )
@@ -31,12 +32,34 @@ app.get('/rovers', async (req, res) => {
 
 })
 
-// https://api.nasa.gov/mars-photos/api/v1/rovers/?earth_date=2022-09-30&api_key=DEMO_KEY
-// Get Information about rover
-// https://api.nasa.gov/mars-photos/api/v1/manifests/curiosity?API_KEY=DEMO_KEY
+// Get Information about specific rover
+app.get(`/rovers/:rover_name`, async (req, res) => {
+    try {
+        const manifest = await fetch(`https://api.nasa.gov/mars-photos/api/v1/manifests/${req.params.rover_name}?API_KEY=${process.env.API_KEY}`)
+            .then(res => res.json())
+        res.send( manifest )
+    } catch (err) {
+        console.log('error: ', err);
+    }
+
+})
+
+// TODO: perhaps set earth day a query param
+app.get(`/rovers/:roverName/photos/:earthDate`, async (req, res) => {
+    console.log("EarthDate is: ", req.params.earthDate)
+    try {
+        const photos = await fetch(`https://api.nasa.gov/mars-photos/api/v1/rovers/${req.params.roverName}/photos?earth_date=${req.params.earthDate}&API_KEY=${process.env.API_KEY}`)
+            .then(res => res.json())
+        res.send( photos )
+    } catch (err) {
+        console.log('error: ', err);
+    }
+
+})
+
 // Get the list of photos from a rover
 // https://api.nasa.gov/mars-photos/api/v1/manifests/curiosity?API_KEY=DEMO_KEY (.photos)
-// Get specific photos by earth_day
+
 // https://api.nasa.gov/mars-photos/api/v1/rovers/spirit/photos?earth_date=2010-03-21&api_key=DEMO_KEY
 
 
