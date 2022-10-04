@@ -53,8 +53,8 @@ const SelectionItemForRoverName =  (roverName, roverId) => {
 
 
 // COMPONENTS
-const RoverPhotos = async(rover_name, earth_day) => {
-    const fetchedPhotos = await getRoverPhotosByEarthDate(rover_name, earth_day)
+const RoverPhotos = async(roverName, earthDate) => {
+    const fetchedPhotos = await getRoverPhotosByEarthDate(roverName, earthDate)
     return fetchedPhotos.toJS()
 }
 const RoverDetail = async (roverName) => {
@@ -120,9 +120,9 @@ async function getRoverDetail (roverName) {
     }
 }
 
-async function getRoverPhotosByEarthDate(rover_name, earthDate) {
+async function getRoverPhotosByEarthDate(roverName, earthDate) {
     try {
-        const response = await fetch(`http://localhost:3000/rovers/${rover_name}/photos/${earthDate}`)
+        const response = await fetch(`http://localhost:3000/rovers/${roverName}/photos/${earthDate}`)
             .then(res => res.json())
         return Immutable.List(response.photos)
     } catch (err) {
