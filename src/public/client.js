@@ -1,4 +1,3 @@
-
 let store = Immutable.Map({
     user: { name: "Student" },
     apod: { image: '' },
@@ -18,8 +17,6 @@ const updateStore = (state, newState) => {
     return state.merge(newState)
 }
 
-
-// TODO: why is render async ? It works without async.
 const render = async (root, state) => {
     root.innerHTML = await App(state)
 }
@@ -31,16 +28,16 @@ const App = async (state) => {
     const rovers = state.get("rovers")
     const user = state.get("user").name
 
-
-
     return `
         <header></header>
         <main>
             <section>
-                ${await Rovers(state, rovers)}
-                ${await RoverDetail(state, "curiosity")}
-                ${await RoverDetail(state, "opportunity")}
-                ${await RoverPhotos(state, "opportunity", "2018-06-11")}
+                ${await Rovers(rovers)}
+                ${await RoverDetail("curiosity")}
+                ${await RoverDetail("opportunity")}
+                ${await RoverDetail("spirit")}
+                ${await RoverDetail("perseverance")}
+                ${await RoverPhotos("opportunity", "2018-06-11")}
                 
             </section>
         </main>
@@ -48,7 +45,6 @@ const App = async (state) => {
     `
 }
 
-// ${await RoverDetail(state, "persistence")} // TODO: this one throws an error!
 
 // UTILS
 const SelectionItemForRoverName =  (roverName, roverId) => {
@@ -57,41 +53,25 @@ const SelectionItemForRoverName =  (roverName, roverId) => {
 
 
 // COMPONENTS
-const RoverPhotos = async(state, rover_name, earth_day) => {
-    const fetchedPhotos = await getRoverRecentPhotos(rover_name, earth_day)
-    return Immutable.Map(fetchedPhotos).get("photos")
+const RoverPhotos = async(rover_name, earth_day) => {
+    const fetchedPhotos = await getRoverPhotosByEarthDate(rover_name, earth_day)
+    return fetchedPhotos.toJS()
 }
-
-
-const RoverDetail = async (state, rover) => {
-    const fetchedRoverDetail = await getRoverDetail(rover)
-    const oldRoverDetail = Immutable.Map({
-        name: fetchedRoverDetail["photo_manifest"]["name"],
-        status: fetchedRoverDetail["photo_manifest"]["status"],
-        landing_date: fetchedRoverDetail["photo_manifest"]["landing_date"],
-        launch_date: fetchedRoverDetail["photo_manifest"]["launch_date"],
-        max_date: fetchedRoverDetail["photo_manifest"]["max_date"],
-    })
-    const roverDetail = Immutable.Map({
-        name: "",
-        status: "",
-        landing_date: "",
-        launch_date: "",
-        max_date: ""
-    })
-    return roverDetail.merge(oldRoverDetail)
+const RoverDetail = async (roverName) => {
+    const fetchedRoverDetail = await getRoverDetail(roverName)
+    // Return Immutable.Map object
+    return fetchedRoverDetail
 
 }
-const Rovers = async (state, rovers) => {
-    let updatedData = rovers;
+const Rovers = async (roversNames) => {
+    let updatedData = roversNames;
 
-    // if there are no rovers in the state, fetch them and update store
+    // if there are no rovers_names, fetch them
     if (updatedData.length === 0) {
-        const data = await getRoversNames(state);
-        const roversNames = data.rovers.rovers.map(rover => rover.name)
-        updatedData =  updateStore(state, {rovers: roversNames}).get("rovers")
+        const immutableData = await getRoversNames();
+        updatedData = immutableData.toJS()
     }
-    console.log("UpdatedData is: ", updatedData)
+
     // TODO: make from for loop a recursive function
     let options = "";
     for (let i=0; i< updatedData.length; i++ ) {
@@ -107,81 +87,45 @@ const Rovers = async (state, rovers) => {
      </select>
     </div>
     `
-
-    // return updatedData
-
-}
-
-// Example of a pure function that renders information requested from the backend
-
-const ImageOfTheDay = async (state, apod) => {
-
-    // If image does not already exist, or it is not from today -- request it again
-    const today = new Date()
-    let apodImage = apod.image
-    // TODO: is it best practice to have Invalid Date here?
-
-    if (!apodImage || apodImage.date === today.getDate() ) {
-        apod = await getImageOfTheDay()
-        // TODO: Do I still need to update this state ?
-        apodImage = updateStore(state, {apod} ).get("apod").image
-    }
-
-    // TODO: check that the attribute media_type on apod is set correctly
-    // check if the photo of the day is actually type video!
-    if (apod.media_type === "video") {
-        return (`
-            <p>See today's featured video <a href="${apod.url}">here</a></p>
-            <p>${apod.title}</p>
-            <p>${apod.explanation}</p>
-        `)
-    } else {
-        return (`
-            <img src="${apodImage.url}" height="350px" width="100%" />
-            <p>${apodImage.explanation}</p>
-        `)
-    }
 }
 
 
-// API CALLS
-async function getRoversNames (state) {
+// Service API CALLS
+async function getRoversNames () {
     try {
-     const response = await fetch('http://localhost:3000/rovers')
-     return response.json()
+        const response = await fetch('http://localhost:3000/rovers')
+            .then(res => res.json())
+        return Immutable.List(response.rovers.rovers.map(rover => rover.name))
     } catch (err) {
         console.log('error', err)
     }
 }
 
-async function getRoverDetail (rover) {
+async function getRoverDetail (roverName) {
     try {
-        const response = await fetch(`http://localhost:3000/rovers/${rover}`)
-        return response.json()
+        const response = await fetch(`http://localhost:3000/rovers/${roverName}`)
+            .then(res => res.json())
+        // Get from the response only the details that are relevant for rover Detail
+        return Immutable.Map(
+            {
+                name: response["photo_manifest"]["name"],
+                status: response["photo_manifest"]["status"],
+                landing_date: response["photo_manifest"]["landing_date"],
+                launch_date: response["photo_manifest"]["launch_date"],
+                max_date: response["photo_manifest"]["max_date"],
+            })
+
     } catch (err) {
         console.log('error', err)
     }
 }
 
-async function getRoverRecentPhotos(rover_name, earthDate) {
+async function getRoverPhotosByEarthDate(rover_name, earthDate) {
     try {
         const response = await fetch(`http://localhost:3000/rovers/${rover_name}/photos/${earthDate}`)
-        return response.json()
+            .then(res => res.json())
+        return Immutable.List(response.photos)
     } catch (err) {
         console.log('error', err)
     }
-}
-
-// Example API call
-const getImageOfTheDay = async () => {
-    console.log("Getting Image of the Day.")
-    try {
-        const response = await fetch(`http://localhost:3000/apod`)
-        return response.json()
-    } catch(err) {
-        console.log('error',err);
-    }
-
-    // TODO: what is with this undefined var data ?
-    //return data
 }
