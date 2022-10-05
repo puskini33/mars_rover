@@ -3,6 +3,7 @@ window.addEventListener('load', () => {
     render(root)
 })
 
+// listening for clicks event and checked if it happens on one of the Rover's Name
 document.body.addEventListener( 'click', async function ( event ) {
     let roverName;
     if ( event.target.id === 'box-Curiosity' ) {
@@ -22,6 +23,7 @@ document.body.addEventListener( 'click', async function ( event ) {
 
     // Delete the element's text before filling it again with text
     document.getElementById("detail-container").innerHTML = "";
+    // Reference: https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentHTML
     document.getElementById("detail-container").insertAdjacentHTML('beforeend', result)
 
 } );
@@ -56,7 +58,6 @@ const Rovers = async (html_builder) => {
     const roverNames = await getRoversNames();
     const JSRoverNames = roverNames.toJS()
 
-    // TODO: make from for loop a recursive function
     let options = "";
     for (let i=0; i< JSRoverNames.length; i++ ) {
         const option = html_builder(JSRoverNames[i], i)
@@ -114,7 +115,7 @@ const RoverPhotos = async(roverName, earthDate, html_builder) => {
     }
     const fetchedPhotos = await getRoverPhotosByEarthDate(roverName, earthDate)
     const JSFetchedPhotos = fetchedPhotos.toJS()
-    // TODO: make from for loop a recursive function
+
     let htmlPhotos = "";
     for (let i=0; i < JSFetchedPhotos.length; i++) {
         htmlPhotos = htmlPhotos + html_builder(JSFetchedPhotos[i], roverName, i)
