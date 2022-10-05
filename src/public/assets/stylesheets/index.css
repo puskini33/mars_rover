@@ -20,22 +20,21 @@ footer {
   /* footer styles */
 }
 
-/* Dynamic Side Bar to select rovers */
+
 #grid-container {
   top: 0;
   left: 0;
   margin-right: 10px;
-  width: 150px;
+  width: 120px;
   background-color: #9C2E35;
   position: fixed;
   height: 100%;
 }
 
-
 #grid-container div {
-  margin-right: 10px;
-  padding: 30px;
-}
+    margin-right: 3px;
+    padding: 10px;
+  }
 
 #grid-container div a {
   text-align: center;
@@ -45,27 +44,61 @@ footer {
 
 #box-0 {
   grid-row-start: 0;
-  grid-row-end: 4;
+  grid-row-end: 3;
+}
+
+#detail-container {
+  left: 250px;
 }
 
 #fetchedRover {
-  right: 100px;
+  padding-left: 100px;
   text-align: center;
+  font-size: 12px;
 }
 
 /* -------------------  TABLET  --------------------- */
 @media (min-width: 768px) {
-  /* use mobile */
+  #grid-container {
+    width: 160px;
+  }
+
+  #grid-container div a {
+    font-size: 18px;
+  }
+
+  #fetchedRover {
+    font-size: 20px;
+  }
+
 }
 
 /* -------------------  DESKTOP  -------------------- */
 
 @media (min-width: 1224px) {
-  /* use mobile */
+  #grid-container {
+    width: 200px;
+  }
+
+  #grid-container div a {
+    font-size: 25px;
+  }
+  #fetchedRover {
+    font-size: 22px;
+  }
 }
 
 /* -------------------  LARGE SCREENS  -------------- */
 
 @media (min-width: 1824px) {
-  /* use mobile */
+  #grid-container {
+    width: 250px;
+  }
+
+  #grid-container div a {
+    font-size: 30px;
+  }
+  #fetchedRover {
+    font-size: 30px;
+  }
 }

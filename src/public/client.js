@@ -56,7 +56,7 @@ const App = async () => {
 
 // UTILS
 const BoxElementForRoverName =  (roverName, index) => {
-    return `<div><a id="box-${roverName}">${roverName}</a></div>`
+    return `<div><a id="box-${roverName}" href="#${roverName}">${roverName}</a></div>`
 }
 
 // ${await RoverDetail("curiosity")}
@@ -78,10 +78,9 @@ const Rovers = async () => {
         const option = BoxElementForRoverName(updatedData[i], i)
         options = options + option
     }
-
+    /* Build Dynamic Side Bar to select rovers */
     return `
     <div id="grid-container">
-        <div id="box-0"><a class="active" href="#home">Home</a></div>
         ${options}
     </div>
     <div id="detail-container"></div>
