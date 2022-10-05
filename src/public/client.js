@@ -119,7 +119,7 @@ const RoverDetail = async (roverName) => {
 
 }
 
-// higher-order function II that is reusable UI elements because it takes as parameter html_builder function and calls it inside AND it returns a callback
+// higher-order function II that is reusable UI elements because it takes as parameter html_builder function AND it returns a callback
 const RoverPhotos = async(roverName, earthDate, html_builder) => {
     // At least one dynamic component on their page (for instance, one that uses an if statement to behave differently based on the presence or absence of a value).
     // This if block will be necessary in case the information from API about roverName and earthDate were not given because the API changed how it returns responses and the values it contains.
