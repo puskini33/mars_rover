@@ -59,6 +59,12 @@ const BoxElementForRoverName =  (roverName, index) => {
     return `<div><a id="box-${roverName}" href="#${roverName}">${roverName}</a></div>`
 }
 
+const ImgElementForRoverPhoto =  (imageSrc, roverName, index) => {
+    return `<img src="${imageSrc}" alt="${roverName}${index}" style="width:600px;height:500px;">`
+}
+
+
+
 // ${await RoverDetail("curiosity")}
 // ${await RoverDetail("opportunity")}
 // ${await RoverDetail("spirit")}
@@ -96,6 +102,8 @@ const RoverDetail = async (roverName) => {
     const fetchedRoverLandingDate = fetchedRoverDetail.get("landing_date")
     const fetchedRoverDateLastPhotos = fetchedRoverDetail.get("max_date")
 
+    const fetchedRoverPhotos = await RoverPhotos(fetchedRoverName, fetchedRoverDateLastPhotos)
+
     // Return Immutable.Map object
     return `<div id="fetchedRover">
         <h1>Mars Rover ${fetchedRoverName}</h1>
@@ -103,14 +111,21 @@ const RoverDetail = async (roverName) => {
         <p>The Rover launched on ${fetchedRoverLaunchDate}</p>
         <p>The Rover landed on ${fetchedRoverLandingDate}</p>
         <p>The Rover did last photos on ${fetchedRoverDateLastPhotos}</p>
+        ${fetchedRoverPhotos}
         </div>`
-    // return fetchedRoverDetail
 
 }
 
 const RoverPhotos = async(roverName, earthDate) => {
     const fetchedPhotos = await getRoverPhotosByEarthDate(roverName, earthDate)
-    return fetchedPhotos.toJS()
+    const JSFetchedPhotos = fetchedPhotos.toJS()
+
+    let htmlPhotos = "";
+    for (let i=0; i < JSFetchedPhotos.length; i++) {
+        htmlPhotos = htmlPhotos + ImgElementForRoverPhoto(JSFetchedPhotos[i], roverName, i)
+    }
+    return htmlPhotos
+
 }
 
 // Service API CALLS
@@ -147,7 +162,8 @@ async function getRoverPhotosByEarthDate(roverName, earthDate) {
     try {
         const response = await fetch(`http://localhost:3000/rovers/${roverName}/photos/${earthDate}`)
             .then(res => res.json())
-        return Immutable.List(response.photos)
+        const photos = response.photos.map(photoLink => photoLink.img_src)
+        return Immutable.List(photos)
     } catch (err) {
         console.log('error', err)
     }
