@@ -27,7 +27,6 @@ app.use("/", express.static(path.join(__dirname, '../public')))
 // Get list of rovers'names
 app.get('/rovers', async (req, res) => {
     try {
-        // TODO: try for the other fetch to put the whole thing in a const like here const rovers
         const rovers = await fetch(`https://api.nasa.gov/mars-photos/api/v1/rovers/?api_key=${process.env.API_KEY}`)
             .then(res => res.json())
         res.send( {rovers} )
@@ -49,8 +48,7 @@ app.get(`/rovers/:rover_name`, async (req, res) => {
 
 })
 
-// Get the list of recent photos from a rover
-// TODO: perhaps set earth day a query param
+// Get the list of photos from a rover based on Earth Date
 app.get(`/rovers/:roverName/photos/:earthDate`, async (req, res) => {
     try {
         const photos = await fetch(`https://api.nasa.gov/mars-photos/api/v1/rovers/${req.params.roverName}/photos?earth_date=${req.params.earthDate}&API_KEY=${process.env.API_KEY}`)

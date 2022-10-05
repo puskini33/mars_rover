@@ -1,90 +1,68 @@
-let store = Immutable.Map({
-    user: { name: "Student" },
-    apod: { image: '' },
-    rovers: [],
-
-})
-
 // listening for load event because page should load before any JS is called
 window.addEventListener('load', () => {
-    render(root, store)
+    render(root)
 })
 
 document.body.addEventListener( 'click', async function ( event ) {
     let roverName;
     if ( event.target.id === 'box-Curiosity' ) {
-        console.log("Curiosity clicked!");
         roverName = "curiosity";
       }
     else if ( event.target.id === 'box-Spirit' ) {
-        console.log("Spirit clicked!");
         roverName = "spirit";
       }
     else if ( event.target.id === 'box-Opportunity' ) {
-        console.log("Opportunity clicked!");
         roverName = "opportunity";
       }
     else if ( event.target.id === 'box-Perseverance' ) {
-        console.log("Perseverance clicked!");
         roverName = "perseverance";
       }
 
     const result = await RoverDetail(roverName);
+
     // Delete the element's text before filling it again with text
     document.getElementById("detail-container").innerHTML = "";
     document.getElementById("detail-container").insertAdjacentHTML('beforeend', result)
 
 } );
 
-// add our markup to the page
+// get root node
 const root = document.getElementById('root')
-
-const updateStore = (state, newState) => {
-    return state.merge(newState)
-}
 
 const render = async (root) => {
     root.innerHTML = await App()
 }
 
-
-// create content
+// create first-page content
 const App = async () => {
-    return `${await Rovers()}`
+    return `${await Rovers(AnchorElementForRoverName)}`
 }
 
 
 // UTILS
-const BoxElementForRoverName =  (roverName, index) => {
+const AnchorElementForRoverName =  (roverName, index) => {
     return `<div><a id="box-${roverName}" href="#${roverName}">${roverName}</a></div>`
 }
 
 const ImgElementForRoverPhoto =  (imageSrc, roverName, index) => {
-    return `<img src="${imageSrc}" alt="${roverName}${index}" style="width:600px;height:500px;">`
+    return `<img src="${imageSrc}" alt="${roverName}${index}">`
 }
 
-
-
-// ${await RoverDetail("curiosity")}
-// ${await RoverDetail("opportunity")}
-// ${await RoverDetail("spirit")}
-// ${await RoverDetail("perseverance")}
-// ${await RoverPhotos("opportunity", "2018-06-11")}
-
-
 // COMPONENTS
-const Rovers = async () => {
 
-    const immutableData = await getRoversNames();
-    const updatedData = immutableData.toJS()
+// higher-order function I that is reusable UI elements because it takes as parameter html_builder function and calls it inside
+const Rovers = async (html_builder) => {
+
+    const roverNames = await getRoversNames();
+    const JSRoverNames = roverNames.toJS()
 
     // TODO: make from for loop a recursive function
     let options = "";
-    for (let i=0; i< updatedData.length; i++ ) {
-        const option = BoxElementForRoverName(updatedData[i], i)
+    for (let i=0; i< JSRoverNames.length; i++ ) {
+        const option = html_builder(JSRoverNames[i], i)
         options = options + option
     }
-    /* Build Dynamic Side Bar to select rovers */
+    // A selection bar for the user to choose which rover's information they want to see
     return `
     <div id="grid-container">
         ${options}
@@ -94,17 +72,24 @@ const Rovers = async () => {
 }
 
 const RoverDetail = async (roverName) => {
-    // TODO: make sure that roverName is lowerCase
+    // At least one dynamic component on their page (for instance, one that uses an if statement to behave differently based on the presence or absence of a value).
+    // This if block will be necessary in case the information from API about roverName and earthDate were not given because the API changed how it returns responses and the values it contains.
+    if (!roverName ) {
+        alert("The rover name was not correctly set.")
+        return
+    }
+
     const fetchedRoverDetail = await getRoverDetail(roverName)
+    // The launch date, landing date, name and status along with any other information about the rover
     const fetchedRoverName = fetchedRoverDetail.get("name")
     const fetchedRoverStatus = fetchedRoverDetail.get("status")
     const fetchedRoverLaunchDate = fetchedRoverDetail.get("launch_date")
     const fetchedRoverLandingDate = fetchedRoverDetail.get("landing_date")
     const fetchedRoverDateLastPhotos = fetchedRoverDetail.get("max_date")
 
-    const fetchedRoverPhotos = await RoverPhotos(fetchedRoverName, fetchedRoverDateLastPhotos)
+    // A gallery of the most recent images sent from each Mars rover
+    const fetchedRoverPhotos = await RoverPhotos(fetchedRoverName, fetchedRoverDateLastPhotos, ImgElementForRoverPhoto)
 
-    // Return Immutable.Map object
     return `<div id="fetchedRover">
         <h1>Mars Rover ${fetchedRoverName}</h1>
         <p>Rover Status is ${fetchedRoverStatus}</p>
@@ -116,13 +101,23 @@ const RoverDetail = async (roverName) => {
 
 }
 
-const RoverPhotos = async(roverName, earthDate) => {
+// higher-order function II that is reusable UI elements because it takes as parameter html_builder function and calls it inside
+const RoverPhotos = async(roverName, earthDate, html_builder) => {
+    // At least one dynamic component on their page (for instance, one that uses an if statement to behave differently based on the presence or absence of a value).
+    // This if block will be necessary in case the information from API about roverName and earthDate were not given because the API changed how it returns responses and the values it contains.
+    if (!earthDate ) {
+        alert("The earth day was not correctly set.")
+        return
+    } else if (!roverName) {
+        alert("The rover name was not correctly set.")
+        return
+    }
     const fetchedPhotos = await getRoverPhotosByEarthDate(roverName, earthDate)
     const JSFetchedPhotos = fetchedPhotos.toJS()
-
+    // TODO: make from for loop a recursive function
     let htmlPhotos = "";
     for (let i=0; i < JSFetchedPhotos.length; i++) {
-        htmlPhotos = htmlPhotos + ImgElementForRoverPhoto(JSFetchedPhotos[i], roverName, i)
+        htmlPhotos = htmlPhotos + html_builder(JSFetchedPhotos[i], roverName, i)
     }
     return htmlPhotos
 
