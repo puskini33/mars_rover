@@ -37,7 +37,8 @@ const render = async (root) => {
 
 // create first-page content
 const App = async () => {
-    return `${await Rovers(AnchorElementForRoverName)}`
+    const roversCallback = await Rovers(AnchorElementForRoverName);
+    return `${roversCallback()}`
 }
 
 
@@ -50,9 +51,26 @@ const ImgElementForRoverPhoto =  (imageSrc, roverName, index) => {
     return `<img src="${imageSrc}" alt="${roverName}${index}">`
 }
 
+// A selection bar for the user to choose which rover's information they want to see
+const sidebarWithRoverNames = (options) => {
+    return `<div id="grid-container">
+        ${options}
+    </div>
+    <div id="detail-container"></div>
+    `
+}
+
+const roverPhotosHtml = (html_builder, JSFetchedPhotos, roverName) => {
+    let htmlPhotos = "";
+    for (let i=0; i < JSFetchedPhotos.length; i++) {
+        htmlPhotos = htmlPhotos + html_builder(JSFetchedPhotos[i], roverName, i)
+    }
+    return htmlPhotos
+}
+
 // COMPONENTS
 
-// higher-order function I that is reusable UI elements because it takes as parameter html_builder function and calls it inside
+// higher-order function I that is reusable UI elements because it takes as parameter html_builder function and calls it inside AND it returns a callback
 const Rovers = async (html_builder) => {
 
     const roverNames = await getRoversNames();
@@ -63,13 +81,11 @@ const Rovers = async (html_builder) => {
         const option = html_builder(JSRoverNames[i], i)
         options = options + option
     }
-    // A selection bar for the user to choose which rover's information they want to see
-    return `
-    <div id="grid-container">
-        ${options}
-    </div>
-    <div id="detail-container"></div>
-    `
+
+    const wrapper = () => {
+        return sidebarWithRoverNames(options)
+    }
+    return wrapper
 }
 
 const RoverDetail = async (roverName) => {
@@ -89,7 +105,8 @@ const RoverDetail = async (roverName) => {
     const fetchedRoverDateLastPhotos = fetchedRoverDetail.get("max_date")
 
     // A gallery of the most recent images sent from each Mars rover
-    const fetchedRoverPhotos = await RoverPhotos(fetchedRoverName, fetchedRoverDateLastPhotos, ImgElementForRoverPhoto)
+    const roverPhotosCallback = await RoverPhotos(fetchedRoverName, fetchedRoverDateLastPhotos, ImgElementForRoverPhoto)
+    const fetchedRoverPhotos = roverPhotosCallback()
 
     return `<div id="fetchedRover">
         <h1>Mars Rover ${fetchedRoverName}</h1>
@@ -102,7 +119,7 @@ const RoverDetail = async (roverName) => {
 
 }
 
-// higher-order function II that is reusable UI elements because it takes as parameter html_builder function and calls it inside
+// higher-order function II that is reusable UI elements because it takes as parameter html_builder function and calls it inside AND it returns a callback
 const RoverPhotos = async(roverName, earthDate, html_builder) => {
     // At least one dynamic component on their page (for instance, one that uses an if statement to behave differently based on the presence or absence of a value).
     // This if block will be necessary in case the information from API about roverName and earthDate were not given because the API changed how it returns responses and the values it contains.
@@ -116,11 +133,11 @@ const RoverPhotos = async(roverName, earthDate, html_builder) => {
     const fetchedPhotos = await getRoverPhotosByEarthDate(roverName, earthDate)
     const JSFetchedPhotos = fetchedPhotos.toJS()
 
-    let htmlPhotos = "";
-    for (let i=0; i < JSFetchedPhotos.length; i++) {
-        htmlPhotos = htmlPhotos + html_builder(JSFetchedPhotos[i], roverName, i)
+    const wrapper = () => {
+        return roverPhotosHtml(html_builder, JSFetchedPhotos, roverName)
     }
-    return htmlPhotos
+
+    return wrapper
 
 }
 
