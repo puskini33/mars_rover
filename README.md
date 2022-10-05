@@ -29,19 +29,3 @@ Install immutable from the script tag in ```index.html```.
    * Copy the file ```.env-sample``` to one called `.env` and enter in your key.
 
 6. To start the backend server run `yarn start` in your terminal and go to `http:localhost:3000` to check the app. When interacting with the app, please allow some time before display of information that the rover data is fetched from NASA Server.
-
-### Project Requirements
-
-To complete this project, your frontend code must:
-
-- [ ] Use only pure functions
-- [ ] Use at least 2 Higher Order Function
-- [ X ] Use the array method `map`
-- [ ] Use the ImmutableJS library
-
-To complete this project, your backend code must:
-
-- [ X ] Be built with Node/Express
-- [ X ] Make successful calls to the NASA API
-- [ ] Use pure functions to do any logic necessary
-- [X] Hide any sensitive information from public view (In other words, use your dotenv file)
