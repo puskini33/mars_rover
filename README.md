@@ -19,8 +19,7 @@ images taken by that rover, as well as important information about the rover and
 ```git clone <repo-name>```
 
 2. Install dependencies:
-```yarn install``` 
-
+```yarn install```
 **If you don’t have yarn installed globally, follow their installation documentation here according to your operating system: https://yarnpkg.com/lang/en/docs/install
 3. Install javascript library ImmutableJS
 Install immutable from the script tag in ```index.html```.
